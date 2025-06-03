@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+            color: #2d3748;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        h1 {
+            text-align: center;
+            color: #1a202c;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+        h2, h3 {
+            color: #1a202c;
+            font-weight: 600;
+        }
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .export-btn {
+            background-color: #3182ce;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .export-btn:hover {
+            background-color: #2b6cb0;
+        }
+        .btn-pdf {
+            background-color: #e53e3e;
+        }
+        .btn-pdf:hover {
+            background-color: #c53030;
+        }
+        .inspections-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .inspection-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .inspection-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        .inspection-card h3 {
+            margin-top: 0;
+            color: #3182ce;
+            font-size: 1.25rem;
+        }
+        .inspection-card p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+        .status-pending {
+            color: #d69e2e;
+            font-weight: 600;
+        }
+        .status-approved {
+            color: #38a169;
+            font-weight: 600;
+        }
+        .status-rejected {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-approve {
+            background-color: #38a169;
+            color: white;
+        }
+        .btn-approve:hover {
+            background-color: #2f855a;
+        }
+        .btn-reject {
+            background-color: #e53e3e;
+            color: white;
+        }
+        .btn-reject:hover {
+            background-color: #c53030;
+        }
+        .btn-delete {
+            background-color: #718096;
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #5a6268;
+        }
+        .image-gallery {
+            margin-top: 12px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 12px;
+        }
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .gallery-title {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .image-count {
+            background-color: #3182ce;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+        .thumbnail-container {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+        .thumbnail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .thumbnail-img:hover {
+            transform: scale(1.05);
+        }
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow: auto;
+        }
+        .modal-container {
+            width: 90%;
+            max-width: 1200px;
+            min-height: 90%;
+            display: flex;
+            flex-direction: column;
+            margin: 5vh auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+        .modal-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: auto;
+            max-height: calc(100vh - 100px);
+        }
+        .modal-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border: 2px solid white;
+            border-radius: 4px;
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+        .modal-image.zoomed {
+            cursor: zoom-out;
+            transform: scale(1.5);
+        }
+        .close-modal {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close-modal:hover {
+            color: #e53e3e;
+        }
+        .image-navigation {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .nav-arrow {
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            user-select: none;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .nav-arrow:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .image-info {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            text-align: center;
+            font-size: 16px;
+            position: sticky;
+            bottom: 0;
+        }
+        .zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .zoom-btn {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .zoom-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        .no-inspections {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 20px;
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        .analytics-section {
+            margin: 32px 0;
+            padding: 24px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #3182ce;
+        }
+        .stat-label {
+            font-size: 0.95rem;
+            color: #718096;
+            margin-top: 8px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .export-btn, .btn-pdf {
+                width: 100%;
+                margin-top: 12px;
+            }
+            .thumbnail-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+            .nav-arrow {
+                font-size: 30px;
+                width: 40px;
+                height: 40px;
+            }
+            .modal-container {
+                width: 95%;
+                min-height: 85%;
+            }
+            .chart-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header-controls">
+            <h1>Vehicle Handover Dashboard Management</h1>
+            <div>
+                <button class="export-btn" id="exportCSV">Export to CSV</button>
+                <button class="export-btn btn-pdf" id="exportPDF">Export to PDF</button>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h2>Handover Analytics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalInspections">0</div>
+                    <div class="stat-label">Total Handovers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="approvedInspections">0</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pendingInspections">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="rejectedInspections">0</div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="itemsPieChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="inspections-list" id="inspectionsList">
+            <!-- Inspections will be loaded here -->
+        </div>
+    </div>
+
+    <div class="image-modal" id="imageModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div id="modalTitle">Inspection Image</div>
+                <span class="close-modal">×</span>
+            </div>
+            <div class="modal-content">
+                <div class="image-navigation">
+                    <span class="nav-arrow" id="prevImage">❮</span>
+                    <span class="nav-arrow" id="nextImage">❯</span>
+                </div>
+                <img class="modal-image" id="modalImage">
+            </div>
+            <div class="image-info" id="imageInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const inspectionsList = document.getElementById('inspectionsList');
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const imageInfo = document.getElementById('imageInfo');
+            const closeModal = document.querySelector('.close-modal');
+            const exportCSVBtn = document.getElementById('exportCSV');
+            const exportPDFBtn = document.getElementById('exportPDF');
+            const prevImageBtn = document.getElementById('prevImage');
+            const nextImageBtn = document.getElementById('nextImage');
+            const modalContent = document.querySelector('.modal-content');
+
+            // Chart Instances
+            let statusChart, itemsPieChart, trendChart;
+
+            // Image Navigation State
+            let currentInspection = null;
+            let currentInspectionImages = [];
+            let currentImageIndex = 0;
+
+            // Initialize IndexedDB
+            const request = indexedDB.open('VehicleInspectionsDB', 1);
+
+            request.onupgradeneeded = event => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('inspections')) {
+                    const store = db.createObjectStore('inspections', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                    store.createIndex('status', 'status', { unique: false });
+                }
+            };
+
+            request.onsuccess = event => {
+                const db = event.target.result;
+                loadInspections(db);
+                updateAnalytics(db);
+            };
+
+            request.onerror = event => {
+                console.error('IndexedDB error:', event.target.error);
+                inspectionsList.innerHTML = '<div class="no-inspections">Error loading database. Please refresh the page.</div>';
+            };
+
+            // Load and Render Inspections
+            function loadInspections(db) {
+                const transaction = db.transaction(['inspections'], 'readonly');
+                const store = transaction.objectStore('inspections');
+                const request = store.getAll();
+
+                request.onsuccess = () => renderInspections(request.result);
+                request.onerror = event => {
+                    console.error('Error loading handovers:', event.target.error);
+                    inspectionsList.innerHTML = '<div class="no-inspections">Error loading inspections. Please try again.</div>';
+                };
+            }
+
+            function renderInspections(inspections) {
+                inspectionsList.innerHTML = '';
+
+                if (inspections.length === 0) {
+                    inspectionsList.innerHTML = '<div class="no-inspections">No inspections found.</div>';
+                    return;
+                }
+
+                inspections.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                inspections.forEach(inspection => {
+                    const card = document.createElement('div');
+                    card.className = 'inspection-card';
+
+                    const uploadedImages = inspection.uploadedImages || [];
+                    const inspectionItems = inspection.inspectionItems || [];
+
+                    card.innerHTML = `
+                        <h3>Handover #${inspection.id || 'N/A'}</h3>
+                        <p><strong>Courier Name:</strong> ${inspection.courierName || 'N/A'}</p>
+                        <p><strong>Iquama Number:</strong> ${inspection.iquamaNumber || 'N/A'}</p>
+                        <p><strong>Plate Number:</strong> ${inspection.plateNumber || 'N/A'}</p>
+                        <p><strong>Mobile Number:</strong> ${inspection.mobileNumber || 'N/A'}</p>
+                        <p><strong>Checked By:</strong> ${inspection.checkedBy || 'N/A'}</p>
+                        <p><strong>Odometer:</strong> ${inspection.odometer || 'N/A'}</p>
+                        <p><strong>Date:</strong> ${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : 'N/A'}</p>
+                        <p><strong>Status:</strong> <span class="status-${inspection.status}">${inspection.status || 'pending'}</span></p>
+                        <p><strong>Marked Points:</strong> ${inspection.selectedPoints ? inspection.selectedPoints.length : 0}</p>
+                        <p><strong>Inspection Items:</strong> ${inspectionItems.length > 0 ? inspectionItems.map(item => {
+                            if (item === 'tools') return '🛠️ Tools';
+                            if (item === 'fireExtinguisher') return '🧯 Fire Extinguisher';
+                            if (item === 'spareTire') return '⚫ Spare Tire';
+                            if (item === 'medicalKit') return '🧰 Medical Kit';
+                            return item;
+                        }).join(', ') : 'None'}</p>
+                    `;
+
+                    // Image Gallery
+                    const gallery = document.createElement('div');
+                    gallery.className = 'image-gallery';
+
+                    const galleryHeader = document.createElement('div');
+                    galleryHeader.className = 'gallery-header';
+                    galleryHeader.innerHTML = `
+                        <span class="gallery-title">Images</span>
+                        <span class="image-count">${uploadedImages.length}</span>
+                    `;
+
+                    const thumbnailGrid = document.createElement('div');
+                    thumbnailGrid.className = 'thumbnail-grid';
+
+                    if (uploadedImages.length > 0) {
+                        uploadedImages.forEach((img, index) => {
+                            const thumbnailContainer = document.createElement('div');
+                            thumbnailContainer.className = 'thumbnail-container';
+
+                            const thumbnail = document.createElement('img');
+                            thumbnail.className = 'thumbnail-img';
+                            thumbnail.src = img.url || img;
+                            thumbnail.dataset.index = index;
+                            thumbnail.dataset.inspection = inspection.id;
+
+                            thumbnailContainer.appendChild(thumbnail);
+                            thumbnailGrid.appendChild(thumbnailContainer);
+                        });
+                    } else {
+                        thumbnailGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">No images available</p>';
+                    }
+
+                    gallery.appendChild(galleryHeader);
+                    gallery.appendChild(thumbnailGrid);
+                    card.appendChild(gallery);
+
+                    // Action Buttons
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.className = 'action-buttons';
+
+                    if (inspection.status === 'pending') {
+                        buttonsDiv.innerHTML += `
+                            <button class="btn btn-approve" data-id="${inspection.id}">Approve</button>
+                            <button class="btn btn-reject" data-id="${inspection.id}">Reject</button>
+                        `;
+                    }
+
+                    buttonsDiv.innerHTML += `
+                        <button class="btn btn-delete" data-id="${inspection.id}">Delete</button>
+                    `;
+
+                    card.appendChild(buttonsDiv);
+                    inspectionsList.appendChild(card);
+                });
+
+                // Thumbnail Click Events
+                document.querySelectorAll('.thumbnail-img').forEach(thumb => {
+                    thumb.addEventListener('click', () => {
+                        const inspectionId = parseInt(thumb.dataset.inspection);
+                        const imgIndex = parseInt(thumb.dataset.index);
+
+                        const dbRequest = indexedDB.open('VehicleInspectionsDB', 1);
+                        dbRequest.onsuccess = event => {
+                            const db = event.target.result;
+                            const transaction = db.transaction(['inspections'], 'readonly');
+                            const store = transaction.objectStore('inspections');
+                            const getRequest = store.get(inspectionId);
+
+                            getRequest.onsuccess = () => {
+                                const inspection = getRequest.result;
+                                if (inspection) {
+                                    currentInspection = inspection;
+                                    currentInspectionImages = inspection.uploadedImages || [];
+                                    currentImageIndex = imgIndex;
+
+                                    if (currentInspectionImages.length > 0) {
+                                        updateModalImage();
+                                        imageModal.style.display = 'flex';
+                                        modalImage.classList.remove('zoomed');
+                                    }
+                                }
+                            };
+                        };
+                    });
+                });
+
+                // Action Button Events
+                document.querySelectorAll('.btn-approve').forEach(btn => {
+                    btn.addEventListener('click', () => updateInspectionStatus(btn.dataset.id, 'approved'));
+                });
+
+                document.querySelectorAll('.btn-reject').forEach(btn => {
+                    btn.addEventListener('click', () => updateInspectionStatus(btn.dataset.id, 'rejected'));
+                });
+
+                document.querySelectorAll('.btn-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (confirm('Are you sure you want to delete this handover?')) {
+                            deleteInspection(btn.dataset.id);
+                        }
+                    });
+                });
+            }
+
+            // Modal Image Functions
+            function updateModalImage() {
+                if (currentInspectionImages.length === 0) return;
+
+                const image = currentInspectionImages[currentImageIndex];
+                modalImage.src = image.url || image;
+                modalTitle.textContent = `Handover #${currentInspection.id} - Image ${currentImageIndex + 1}`;
+                imageInfo.textContent = `${currentImageIndex + 1} of ${currentInspectionImages.length} images`;
+
+                // Add zoom controls dynamically
+                let zoomControls = document.querySelector('.zoom-controls');
+                if (!zoomControls) {
+                    zoomControls = document.createElement('div');
+                    zoomControls.className = 'zoom-controls';
+                    zoomControls.innerHTML = `
+                        <button class="zoom-btn" id="zoomIn">+</button>
+                        <button class="zoom-btn" id="zoomOut">-</button>
+                    `;
+                    modalContent.appendChild(zoomControls);
+
+                    document.getElementById('zoomIn').addEventListener('click', () => {
+                        modalImage.classList.add('zoomed');
+                    });
+
+                    document.getElementById('zoomOut').addEventListener('click', () => {
+                        modalImage.classList.remove('zoomed');
+                    });
+                }
+            }
+
+            function showNextImage() {
+                if (currentInspectionImages.length === 0) return;
+                currentImageIndex = (currentImageIndex + 1) % currentInspectionImages.length;
+                updateModalImage();
+            }
+
+            function showPrevImage() {
+                if (currentInspectionImages.length === 0) return;
+                currentImageIndex = (currentImageIndex - 1 + currentInspectionImages.length) % currentInspectionImages.length;
+                updateModalImage();
+            }
+
+            // Modal Navigation Events
+            nextImageBtn.addEventListener('click', showNextImage);
+            prevImageBtn.addEventListener('click', showPrevImage);
+
+            document.addEventListener('keydown', e => {
+                if (imageModal.style.display === 'flex') {
+                    if (e.key === 'ArrowRight') showNextImage();
+                    else if (e.key === 'ArrowLeft') showPrevImage();
+                    else if (e.key === 'Escape') imageModal.style.display = 'none';
+                }
+            });
+
+            closeModal.addEventListener('click', () => imageModal.style.display = 'none');
+            imageModal.addEventListener('click', e => {
+                if (e.target === imageModal) imageModal.style.display = 'none';
+            });
+
+            modalImage.addEventListener('click', () => {
+                modalImage.classList.toggle('zoomed');
+            });
+
+            // Inspection Status
+            function updateInspectionStatus(id, status) {
+                const request = indexedDB.open('VehicleInspectionsDB', 1);
+
+                request.onsuccess = event => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['inspections'], 'readwrite');
+                    const store = transaction.objectStore('inspections');
+
+                    const getRequest = store.get(parseInt(id));
+
+                    getRequest.onsuccess = () => {
+                        const inspection = getRequest.result;
+                        if (inspection) {
+                            inspection.status = status;
+                            const putRequest = store.put(inspection);
+
+                            putRequest.onsuccess = () => {
+                                loadInspections(db);
+                                updateAnalytics(db);
+                                alert(`Inspection #${id} has been ${status}`);
+                            };
+
+                            putRequest.onerror = event => {
+                                console.error('Error updating inspection:', event.target.error);
+                                alert('Error updating inspection. Please try again.');
+                            };
+                        }
+                    };
+
+                    getRequest.onerror = event => {
+                        console.error('Error fetching inspection:', event.target.error);
+                        alert('Error updating inspection. Please try again.');
+                    };
+                };
+
+                request.onerror = event => {
+                    console.error('Error opening database:', event.target.error);
+                    alert('Error accessing database. Please try again.');
+                };
+            }
+
+            function deleteInspection(id) {
+                const request = indexedDB.open('VehicleInspectionsDB', 1);
+
+                request.onsuccess = event => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['inspections'], 'readwrite');
+                    const store = transaction.objectStore('inspections');
+
+                    const deleteRequest = store.delete(parseInt(id));
+
+                    deleteRequest.onsuccess = () => {
+                        loadInspections(db);
+                        updateAnalytics(db);
+                        alert(`Handover #${id} has been deleted`);
+                    };
+
+                    deleteRequest.onerror = event => {
+                        console.error('Error deleting inspection:', event.target.error);
+                        alert('Error deleting inspection.');
+                    };
+                };
+
+                request.onerror = event => {
+                    console.error('Error opening database:', event.target.error);
+                    alert('Error accessing database.');
+                };
+            }
+
+            // Analytics Functions
+            function updateAnalytics(db) {
+                const transaction = db.transaction(['inspections'], 'readonly');
+                const store = transaction.objectStore('inspections');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const inspections = request.result;
+                    updateStats(inspections);
+                    updateCharts(inspections);
+                };
+
+                request.onerror = event => {
+                    console.error('Error loading handovers for analytics:', event.target.error);
+                };
+            }
+
+            function updateStats(inspections) {
+                document.getElementById('totalInspections').textContent = inspections.length;
+                document.getElementById('approvedInspections').textContent = inspections.filter(i => i.status === 'approved').length;
+                document.getElementById('pendingInspections').textContent = inspections.filter(i => i.status === 'pending').length;
+                document.getElementById('rejectedInspections').textContent = inspections.filter(i => i.status === 'rejected').length;
+            }
+
+            function updateCharts(inspections) {
+                // Status Bar Chart
+                if (statusChart) statusChart.destroy();
+                const statusCtx = document.getElementById('statusChart').getContext('2d');
+                statusChart = {
+                    type: 'bar',
+                    data: {
+                        labels: ['Approved', 'Pending', 'Rejected'],
+                        datasets: [{
+                            label: 'Inspection Status',
+                            data: [
+                                inspections.filter(i => i.status === 'approved').length,
+                                inspections.filter(i => i.status === 'pending').length,
+                                inspections.filter(i => i.status === 'rejected').length
+                            ],
+                            backgroundColor: ['#38a169', '#d69e2e', '#e53e3e'],
+                            borderColor: ['#2f855a', '#b7791f', '#c53030'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Handover Status Distribution', font: { size: 16 } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        }
+                    }
+                };
+
+                // Pie Chart for Inspection Items
+                if (itemsPieChart) itemsPieChart.destroy();
+                const itemsCounts = {
+                    tools: 0,
+                    fireExtinguisher: 0,
+                    spareTire: 0,
+                    medicalKit: 0
+                };
+                inspections.forEach(i => {
+                    (i.inspectionItems || []).forEach(item => {
+                        if (item in itemsCounts) itemsCounts[item]++;
+                    });
+                });
+                const itemsPieCtx = document.getElementById('itemsPieChart').getContext('2d');
+                itemsPieChart = {
+                    type: 'pie',
+                    data: {
+                        labels: ['Tools', 'Fire Extinguisher', 'Spare Tire', 'Medical Kit'],
+                        datasets: [{
+                            data: [itemsCounts.tools, itemsCounts.fireExtinguisher, itemsCounts.spareTire, itemsCounts.medicalKit],
+                            backgroundColor: ['#3182ce', '#ed8936', '#805ad5', '#48bb78'],
+                            borderColor: ['#fff', '#fff', '#fff', '#fff'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 14 } } },
+                            title: { display: true, text: 'Handover Items Distribution', font: { size: 16 } }
+                        }
+                    }
+                };
+
+                // Line Chart for Inspection Trends
+                if (trendChart) trendChart.destroy();
+                const trendData = {};
+                inspections.forEach(i => {
+                    const date = new Date(i.timestamp).toISOString().slice(0, 10); // YYYY-MM-DD
+                    trendData[date] = (trendData[date] || 0) + 1;
+                });
+                const sortedDates = Object.keys(trendData).sort();
+                const trendCtx = document.getElementById('trendChart').getContext('2d');
+                trendChart = {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [{
+                            label: 'Handovers per Day',
+                            data: sortedDates.map(date => trendData[date]),
+                            borderColor: '#3182ce',
+                            backgroundColor: 'rgba(49, 130, 206, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            title: { display: true, text: 'Handover Trends Over Time', font: { size: 16 } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                            x: { ticks: { maxTicksLimit: 10 } }
+                        }
+                    }
+                };
+
+                // Render Charts
+                new Chart(statusCtx, statusChart);
+                new Chart(itemsPieCtx, itemsPieChart);
+                new Chart(trendCtx, trendChart);
+            }
+
+            // Export CSV
+            exportCSVBtn.addEventListener('click', () => {
+                const request = indexedDB.open('VehicleInspectionsDB', 1);
+
+                request.onsuccess = event => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['inspections'], 'readonly');
+                    const store = transaction.objectStore('inspections');
+                    const getAllRequest = store.getAll();
+
+                    getAllRequest.onsuccess = () => {
+                        const inspections = getAllRequest.result;
+
+                        if (inspections.length === 0) {
+                            alert('No inspections to export');
+                            return;
+                        }
+
+                        let csvContent = "ID,Courier Name,Iquama Number,Plate Number,Mobile Number,Odometer,Checked By,Date,Status,Marked Points,Image Count,Inspection Items\n";
+
+                        inspections.forEach(inspection => {
+                            const images = inspection.uploadedImages || [];
+                            const inspectionItems = inspection.inspectionItems || [];
+                            csvContent += `
+                                ${inspection.id},
+                                "${String(inspection.courierName || '').replace(/"/g, '""')}",
+                                ${inspection.iquamaNumber || ''},
+                                "${String(inspection.plateNumber || '').replace(/"/g, '""')}",
+                                ${inspection.mobileNumber || ''},
+                                ${inspection.odometer || ''},
+                                "${String(inspection.checkedBy || '').replace(/"/g, '""')}",
+                                "${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : ''}",
+                                ${inspection.status || 'pending'},
+                                ${inspection.selectedPoints ? inspection.selectedPoints.length : 0},
+                                ${images.length},
+                                "${inspectionItems.join(', ')}"
+                            `.replace(/\n/g, '').trim() + '\n';
+                        });
+
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        const url = document.createElement('a');
+                        url.href = URL.createObjectURL(blob);
+                        url.setAttribute('download', `handovers_${new Date().toISOString().slice(0, 10)}.csv`);
+                        url.style.visibility = 'none';
+                        document.body.appendChild(url);
+                        url.click();
+                        document.body.removeChild(url);
+                    }
+                    getAllRequest.onerror = event => {
+                        console.error('Error exporting to CSV:', event.target.error);
+                        alert('Error loading handovers for export.');
+                    }
+                }
+                request.onerror = event => {
+                    console.error('Error opening database for exporting to CSV:', event.target.error);
+                    alert('Error accessing database for CSV export.');
+                }
+            });
+            exportPDFBtn.addEventListener('click', () => {
+                const request = indexedDB.open('VehicleInspectionsDB', 1);
+
+                request.onsuccess = event => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['inspections'], 'readonly');
+                    const store = transaction.objectStore('inspections');
+                    const getAllRequest = store.getAll();
+
+                    getAllRequest.onsuccess = async () => {
+                        const inspections = getAllRequest.result;
+
+                        if (inspections.length === 0) {
+                            alert('No handovers to export');
+                            exportPDFBtn.innerHTML = 'Export to PDF';
+                            exportPDFBtn.disabled = false;
+                            return;
+                        }
+
+                        exportPDFBtn.innerHTML = '<span class="loading"></span> Generating PDF...';
+                        exportPDFBtn.disabled = true;
+
+                        try {
+                            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+                            // Cover Page
+                            doc.setFontSize(24);
+                            doc.setTextColor(40, 53, 147);
+                            doc.text('Vehicle Handover Report', 105, 20, { align: 'center' });
+
+                            doc.setFontSize(16);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 35, { align: 'center' });
+
+                            // Summary Statistics
+                            const approved = inspections.filter(i => i.status === 'approved').length;
+                            const pending = inspections.filter(i => i.status === 'pending').length;
+                            const rejected = inspections.filter(i => i.status === 'rejected').length;
+
+                            doc.setFontSize(14);
+                            doc.text('Handover Summary', 105, 50, { align: 'center' });
+
+                            doc.setLineWidth(0.5);
+                            doc.setDrawColor(40, 53, 147);
+                            doc.line(50, 55, 160, 55);
+
+                            doc.setFontSize(12);
+                            doc.text(`Total Handovers: ${inspections.length}`, 105, 65, { align: 'center' });
+                            doc.text(`Approved: ${approved}`, 105, 75, { align: 'center' });
+                            doc.text(`Pending: ${pending}`, 105, 85, { align: 'center' });
+                            doc.text(`Rejected: ${rejected}`, 105, 95, { align: 'center' });
+
+                            // Detailed Inspections
+                            for (const [index, inspection] of inspections.entries()) {
+                                doc.addPage();
+
+                                // Inspection Header
+                                doc.setFontSize(18);
+                                doc.setTextColor(40, 53, 147);
+                                doc.text(`Handover #${inspection.id || 'N/A'}`, 14, 20);
+                                doc.setLineWidth(0.3);
+                                doc.setDrawColor(40, 53, 147);
+                                doc.line(14, 25, 196, 25);
+
+                                doc.setFontSize(12);
+                                doc.setTextColor(0, 0, 0);
+
+                                // Basic Info
+                                doc.text('Handover Details', 14, 32);
+                                doc.text(`Courier Name: ${inspection.courierName || 'N/A'}`, 14, 40);
+                                doc.text(`Iquama Number: ${inspection.iquamaNumber || 'N/A'}`, 14, 46);
+                                doc.text(`Plate Number: ${inspection.plateNumber || 'N/A'}`, 14, 52);
+                                doc.text(`Mobile Number: ${inspection.mobileNumber || 'N/A'}`, 14, 58);
+                                doc.text(`Checked By: ${inspection.checkedBy || 'N/A'}`, 14, 64);
+                                doc.text(`Odometer: ${inspection.odometer || 'N/A'}`, 14, 70);
+                                doc.text(`Date: ${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : 'N/A'}`, 110, 40);
+                                doc.text(`Status: ${inspection.status || 'pending'}`, 110, 46);
+                                doc.text(`Marked Points: ${inspection.selectedPoints ? inspection.selectedPoints.length : 0}`, 110, 52);
+
+                                // Inspection Items
+                                const inspectionItems = inspection.inspectionItems || [];
+                                doc.text(`Handover Items: ${inspectionItems.length > 0 ? inspectionItems.map(item => {
+                                    if (item === 'tools') return 'Tools';
+                                    if (item === 'fireExtinguisher') return 'Fire Extinguisher';
+                                    if (item === 'spareTire') return 'Spare Tire';
+                                    if (item === 'medicalKit') return 'Medical Kit';
+                                    return item;
+                                }).join(', ') : 'None'}`, 14, 76);
+
+                                // Images
+                                const uploadedImages = inspection.uploadedImages || [];
+                                let yPosition = 86;
+
+                                if (uploadedImages.length > 0) {
+                                    doc.setFontSize(14);
+                                    doc.text('Handover Images', 14, yPosition);
+                                    doc.setLineWidth(0.3);
+                                    doc.line(14, yPosition + 2, 196, yPosition + 2);
+                                    yPosition += 8;
+
+                                    const imgWidth = 70;
+                                    const imgHeight = 40;
+                                    const imagesPerRow = 3;
+                                    let imagesInCurrentRow = 0;
+                                    let xPosition = 14;
+
+                                    for (const [i, img] of uploadedImages.entries()) {
+                                        if (yPosition + imgHeight > 280) {
+                                            doc.addPage();
+                                            yPosition = 20;
+                                            xPosition = 14;
+                                            imagesInCurrentRow = 0;
+                                            doc.setFontSize(14);
+                                            doc.text('Handover Images (Continued)', 14, yPosition);
+                                            doc.setLineWidth(0.3);
+                                            doc.line(14, yPosition + 2, 196, yPosition + 2);
+                                            yPosition += 8;
+                                        }
+
+                                        if (imagesInCurrentRow >= imagesPerRow) {
+                                            yPosition += imgHeight + 10;
+                                            xPosition = 14;
+                                            imagesInCurrentRow = 0;
+
+                                            if (yPosition + imgHeight > 280) {
+                                                doc.addPage();
+                                                yPosition = 20;
+                                                xPosition = 14;
+                                                doc.setFontSize(14);
+                                                doc.text('Handover Images (Continued)', 14, yPosition);
+                                                doc.setLineWidth(0.3);
+                                                doc.line(14, yPosition + 2, 196, yPosition + 2);
+                                                yPosition += 8;
+                                            }
+                                        }
+
+                                        try {
+                                            const imgObj = new Image();
+                                            imgObj.src = img.url || img;
+
+                                            await new Promise((resolve, reject) => {
+                                                imgObj.onload = resolve;
+                                                imgObj.onerror = () => reject(new Error(`Failed to load image: ${img.url || img}`));
+                                            });
+
+                                            const aspectRatio = imgObj.width / imgObj.height;
+                                            let finalWidth = imgWidth;
+                                            let finalHeight = finalWidth / aspectRatio;
+
+                                            if (finalHeight > imgHeight) {
+                                                finalHeight = imgHeight;
+                                                finalWidth = finalHeight * aspectRatio;
+                                            }
+
+                                            doc.addImage(imgObj, 'JPEG', xPosition, yPosition, finalWidth, finalHeight);
+
+                                            xPosition += finalWidth + 5;
+                                            imagesInCurrentRow++;
+
+                                            if (imagesInCurrentRow >= imagesPerRow) {
+                                                yPosition += finalHeight + 5;
+                                            }
+                                        } catch (error) {
+                                            console.error('Error adding image to PDF:', error);
+                                            doc.text('(Error loading image)', xPosition, yPosition + 5);
+                                            xPosition += 60;
+                                            imagesInCurrentRow++;
+                                        }
+                                    }
+                                } else {
+                                    doc.text('No images available', 14, yPosition);
+                                }
+                            }
+
+                            // Page Numbers
+                            const totalPages = doc.internal.getNumberOfPages();
+                            for (let i = 1; i <= totalPages; i++) {
+                                doc.setPage(i);
+                                doc.setFontSize(10);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text(`Page ${i} of ${totalPages}`, 200, 285, { align: 'right' });
+                            }
+
+                            doc.save(`vehicle_inspections_${new Date().toISOString().slice(0, 10)}.pdf`);
+                        } catch (error) {
+                            console.error('PDF Generation Error:', error);
+                            alert('Error generating PDF: ' + error.message);
+                        } finally {
+                            exportPDFBtn.innerHTML = 'Export to PDF';
+                            exportPDFBtn.disabled = false;
+                        }
+                    };
+
+                    getAllRequest.onerror = () => {
+                        exportPDFBtn.innerHTML = 'Export to PDF';
+                        exportPDFBtn.disabled = false;
+                        alert('Error loading inspection data');
+                    };
+                };
+
+                request.onerror = event => {
+                    console.error('Error opening database:', event.target.error);
+                    exportPDFBtn.innerHTML = 'Export to PDF';
+                    exportPDFBtn.disabled = false;
+                    alert('Error accessing database for export.');
+                };
+            });
+        });
+    </script>
+</body>
+</html>
