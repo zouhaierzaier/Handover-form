@@ -299,7 +299,7 @@
             </div>
             <!-- Buttons -->
             <div class="form-group buttons">
-                <button type="submit">Submit Inspection</button>
+                <button type="submit">Submit </button>
                 <button type="button" id="clearMarks">Clear All Marks</button>
                 <button type="button" id="saveMarkedImage">Save Marked Image</button>
             </div>
@@ -387,7 +387,7 @@
 
             // Real-time validation functions
             function validatePlateNumber() {
-                const plateRegex = /^[A-Za-z0-9\s-]{1,10}$/;
+                const plateRegex = /^[A-Za-z0-9\s-]{1,8}$/;
                 const isValid = plateRegex.test(plateNumberInput.value.trim());
                 plateNumberError.classList.toggle('show', !isValid && plateNumberInput.value);
                 return isValid;
@@ -408,7 +408,7 @@
             }
 
             function validateMobileNumber() {
-                const mobileRegex = /^\d{9}$/;
+                const mobileRegex = /^\d{10}$/;
                 const isValid = mobileRegex.test(mobileNumberInput.value.trim());
                 mobileError.classList.toggle('show', !isValid && mobileNumberInput.value);
                 return isValid;
@@ -492,7 +492,7 @@
             });
 
             function handleFiles(files) {
-                if (files.length + uploadedImages.length > 10) {
+                if (files.length + uploadedImages.length > 16) {
                     alert('Maximum 10 images allowed');
                     return;
                 }
