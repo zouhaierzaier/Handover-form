@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["https://zouhaierzaier.github.io"],
+    "origin": ["https://zouhaierzaier.github.io/Handover-form/test.html"],
     "method": ["GET", "POST"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
