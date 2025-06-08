@@ -1,8 +1,7 @@
 [
-  {
-    "origin": ["https://zouhaierzaier.github.io/Handover-form/test.html"],
+  { "origin": ["https://your-username.github.io", "http://localhost:8000", "null"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"].
     "method": ["GET", "POST"],
-    "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
   }
 ]
