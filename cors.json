@@ -1,6 +1,6 @@
 [
   { "origin": ["https://your-username.github.io", "http://localhost:8000", "null"],
-    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"].
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
     "method": ["GET", "POST"],
     "maxAgeSeconds": 3600
   }
