@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -49,12 +49,11 @@
             </div>
         </div>
         <div class="inspections-list" id="inspectionsList"></div>
-        <a href="test.html">Back to Form</a>
     </div>
     <div class="image-modal" id="imageModal">
         <div class="modal-container">
             <div class="modal-header">
-                <div id="modalTitle">Inspection Image</div>
+                <div id="modalTitle">handover Image</div>
                 <span class="close-modal">×</span>
             </div>
             <div class="modal-content">
@@ -62,28 +61,17 @@
                     <span class="nav-arrow" id="prevImage">❮</span>
                     <span class="nav-arrow" id="nextImage">❯</span>
                 </div>
-                <img class="modal-image" id="modalImage">
+                <img class="modal-image" id="modalImage" alt="Inspection Image">
             </div>
             <div class="image-info" id="imageInfo"></div>
         </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwEY5lboxUVSdLO7cHmBSiP4rBl9Tn-Es",
-            authDomain: "handoverform-15e25.firebaseapp.com",
-            projectId: "handoverform-15e25",
-            storageBucket: "handoverform-15e25.firebasestorage.app",
-            messagingSenderId: "134922268514",
-            appId: "1:134922268514:web:3e58fb5def59cb51da063b",
-            measurementId: "G-QZFY6BHQ5T"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Initialize Supabase
+        const supabase = createClient('https://syjsregcivmyrkwztygq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5anNyZWdjaXZteXJrd3p0eWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDQ1ODYsImV4cCI6MjA2NDk4MDU4Nn0.kPuqfjGHcB6D0gSY7wvZBm5Vt9YkmcpcbyZIdHPn2B4');
         const { jsPDF } = window.jspdf;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -110,43 +98,42 @@
             async function loadInspections() {
                 inspectionsList.innerHTML = '<div class="no-inspections">Loading inspections...</div>';
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'inspections'));
-                    renderInspections(querySnapshot);
+                    const { data: inspections, error } = await supabase
+                        .from('inspections')
+                        .select('*')
+                        .order('timestamp', { ascending: false });
+                    if (error) throw error;
+                    renderInspections(inspections);
                 } catch (error) {
-                    console.error('Error loading inspections:', error);
+                    console.error('Error loading inspections:', error.message);
                     inspectionsList.innerHTML = '<div class="no-inspections">Error loading inspections. Please try again.</div>';
                 }
             }
 
-            function renderInspections(querySnapshot) {
+            function renderInspections(inspections) {
                 inspectionsList.innerHTML = '';
-                const inspections = [];
-                querySnapshot.forEach(doc => inspections.push({ id: doc.id, ...doc.data() }));
-
                 if (inspections.length === 0) {
                     inspectionsList.innerHTML = '<div class="no-inspections">No inspections found.</div>';
                     return;
                 }
 
-                inspections.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
                 inspections.forEach(inspection => {
                     const card = document.createElement('div');
                     card.className = 'inspection-card';
-                    const uploadedImages = inspection.uploadedImages || [];
-                    const inspectionItems = inspection.inspectionItems || [];
+                    const uploadedImages = inspection.uploaded_images || [];
+                    const inspectionItems = inspection.inspection_items || [];
 
                     card.innerHTML = `
                         <h3>Handover #${inspection.id}</h3>
-                        <p><strong>Courier Name:</strong> ${inspection.courierName || 'N/A'}</p>
-                        <p><strong>Iquama Number:</strong> ${inspection.iquamaNumber || 'N/A'}</p>
-                        <p><strong>Plate Number:</strong> ${inspection.plateNumber || 'N/A'}</p>
-                        <p><strong>Mobile Number:</strong> ${inspection.mobileNumber || 'N/A'}</p>
-                        <p><strong>Checked By:</strong> ${inspection.checkedBy || 'N/A'}</p>
+                        <p><strong>Courier Name:</strong> ${inspection.courier_name || 'N/A'}</p>
+                        <p><strong>Iquama Number:</strong> ${inspection.iquama_number || 'N/A'}</p>
+                        <p><strong>Plate Number:</strong> ${inspection.plate_number || 'N/A'}</p>
+                        <p><strong>Mobile Number:</strong> ${inspection.mobile_number || 'N/A'}</p>
+                        <p><strong>Checked By:</strong> ${inspection.checked_by || 'N/A'}</p>
                         <p><strong>Odometer:</strong> ${inspection.odometer || 'N/A'}</p>
                         <p><strong>Date:</strong> ${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : 'N/A'}</p>
                         <p><strong>Status:</strong> <span class="status-${inspection.status}">${inspection.status || 'pending'}</span></p>
-                        <p><strong>Marked Points:</strong> ${inspection.selectedPoints ? inspection.selectedPoints.length : 0}</p>
+                        <p><strong>Marked Points:</strong> ${inspection.selected_points ? inspection.selected_points.length : 0}</p>
                         <p><strong>Inspection Items:</strong> ${inspectionItems.length > 0 ? inspectionItems.map(item => {
                             if (item === 'tools') return '🛠️ Tools';
                             if (item === 'fireExtinguisher') return '🧯 Fire Extinguisher';
@@ -174,6 +161,7 @@
                             const thumbnail = document.createElement('img');
                             thumbnail.className = 'thumbnail-img';
                             thumbnail.src = img.url;
+                            thumbnail.alt = `Image ${index + 1}`;
                             thumbnail.dataset.index = index;
                             thumbnail.dataset.inspection = inspection.id;
                             thumbnailContainer.appendChild(thumbnail);
@@ -207,7 +195,7 @@
                         const inspection = inspections.find(i => i.id === inspectionId);
                         if (inspection) {
                             currentInspection = inspection;
-                            currentInspectionImages = inspection.uploadedImages || [];
+                            currentInspectionImages = inspection.uploaded_images || [];
                             currentImageIndex = imgIndex;
                             if (currentInspectionImages.length > 0) {
                                 updateModalImage();
@@ -247,12 +235,16 @@
                     zoomControls = document.createElement('div');
                     zoomControls.className = 'zoom-controls';
                     zoomControls.innerHTML = `
-                        <button class="zoom-btn" id="zoomIn">+</button>
-                        <button class="zoom-btn" id="zoomOut">-</button>
+                        <button class="zoom-btn" id="zoomInBtn">Zoom In</button>
+                        <button class="zoom-btn" id="zoomOutBtn">Zoom Out</button>
                     `;
                     modalContent.appendChild(zoomControls);
-                    document.getElementById('zoomIn').addEventListener('click', () => modalImage.classList.add('zoomed'));
-                    document.getElementById('zoomOut').addEventListener('click', () => modalImage.classList.remove('zoomed'));
+                    document.getElementById('zoomInBtn').addEventListener('click', () => {
+                        modalImage.classList.add('zoomed');
+                    });
+                    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+                        modalImage.classList.remove('zoomed');
+                    });
                 }
             }
 
@@ -285,38 +277,46 @@
 
             async function updateInspectionStatus(id, status) {
                 try {
-                    const inspectionRef = doc(db, 'inspections', id);
-                    await updateDoc(inspectionRef, { status });
+                    const { error } = await supabase
+                        .from('inspections')
+                        .update({ status })
+                        .eq('id', id);
+                    if (error) throw error;
                     loadInspections();
                     updateAnalytics();
                     alert(`Inspection #${id} has been ${status}`);
                 } catch (error) {
-                    console.error('Error updating inspection:', error);
+                    console.error('Error updating inspection:', error.message);
                     alert('Error updating inspection. Please try again.');
                 }
             }
 
             async function deleteInspection(id) {
                 try {
-                    await deleteDoc(doc(db, 'inspections', id));
+                    const { error } = await supabase
+                        .from('inspections')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
                     loadInspections();
                     updateAnalytics();
                     alert(`Handover #${id} has been deleted`);
                 } catch (error) {
-                    console.error('Error deleting inspection:', error);
+                    console.error('Error deleting inspection:', error.message);
                     alert('Error deleting inspection.');
                 }
             }
 
             async function updateAnalytics() {
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'inspections'));
-                    const inspections = [];
-                    querySnapshot.forEach(doc => inspections.push({ id: doc.id, ...doc.data() }));
+                    const { data: inspections, error } = await supabase
+                        .from('inspections')
+                        .select('*');
+                    if (error) throw error;
                     updateStats(inspections);
                     updateCharts(inspections);
                 } catch (error) {
-                    console.error('Error loading analytics:', error);
+                    console.error('Error loading analytics:', error.message);
                 }
             }
 
@@ -361,7 +361,7 @@
                 if (itemsPieChart) itemsPieChart.destroy();
                 const itemsCounts = { tools: 0, fireExtinguisher: 0, spareTire: 0, medicalKit: 0 };
                 inspections.forEach(i => {
-                    (i.inspectionItems || []).forEach(item => {
+                    (i.inspection_items || []).forEach(item => {
                         if (item in itemsCounts) itemsCounts[item]++;
                     });
                 });
@@ -423,9 +423,8 @@
 
             exportCSVBtn.addEventListener('click', async () => {
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'inspections'));
-                    const inspections = [];
-                    querySnapshot.forEach(doc => inspections.push({ id: doc.id, ...doc.data() }));
+                    const { data: inspections, error } = await supabase.from('inspections').select('*');
+                    if (error) throw error;
 
                     if (inspections.length === 0) {
                         alert('No inspections to export');
@@ -434,19 +433,19 @@
 
                     let csvContent = "ID,Courier Name,Iquama Number,Plate Number,Mobile Number,Odometer,Checked By,Date,Status,Marked Points,Image Count,Inspection Items\n";
                     inspections.forEach(inspection => {
-                        const images = inspection.uploadedImages || [];
-                        const inspectionItems = inspection.inspectionItems || [];
+                        const images = inspection.uploaded_images || [];
+                        const inspectionItems = inspection.inspection_items || [];
                         csvContent += `
                             ${inspection.id},
-                            "${String(inspection.courierName || '').replace(/"/g, '""')}",
-                            ${inspection.iquamaNumber || ''},
-                            "${String(inspection.plateNumber || '').replace(/"/g, '""')}",
-                            ${inspection.mobileNumber || ''},
+                            "${String(inspection.courier_name || '').replace(/"/g, '""')}",
+                            ${inspection.iquama_number || ''},
+                            "${String(inspection.plate_number || '').replace(/"/g, '""')}",
+                            ${inspection.mobile_number || ''},
                             ${inspection.odometer || ''},
-                            "${String(inspection.checkedBy || '').replace(/"/g, '""')}",
+                            "${String(inspection.checked_by || '').replace(/"/g, '""')}",
                             "${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : ''}",
                             ${inspection.status || 'pending'},
-                            ${inspection.selectedPoints ? inspection.selectedPoints.length : 0},
+                            ${inspection.selected_points ? inspection.selected_points.length : 0},
                             ${images.length},
                             "${inspectionItems.join(', ')}"
                         `.replace(/\n\s*/g, '').trim() + '\n';
@@ -461,16 +460,15 @@
                     link.click();
                     document.body.removeChild(link);
                 } catch (error) {
-                    console.error('Error exporting CSV:', error);
+                    console.error('Error exporting CSV:', error.message);
                     alert('Error exporting CSV.');
                 }
             });
 
             exportPDFBtn.addEventListener('click', async () => {
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'inspections'));
-                    const inspections = [];
-                    querySnapshot.forEach(doc => inspections.push({ id: doc.id, ...doc.data() }));
+                    const { data: inspections, error } = await supabase.from('inspections').select('*');
+                    if (error) throw error;
 
                     if (inspections.length === 0) {
                         alert('No inspections to export');
@@ -520,17 +518,17 @@
                         doc.setTextColor(0, 0, 0);
 
                         doc.text('Handover Details', 14, 32);
-                        doc.text(`Courier Name: ${inspection.courierName || 'N/A'}`, 14, 40);
-                        doc.text(`Iquama Number: ${inspection.iquamaNumber || 'N/A'}`, 14, 46);
-                        doc.text(`Plate Number: ${inspection.plateNumber || 'N/A'}`, 14, 52);
-                        doc.text(`Mobile Number: ${inspection.mobileNumber || 'N/A'}`, 14, 58);
-                        doc.text(`Checked By: ${inspection.checkedBy || 'N/A'}`, 14, 64);
+                        doc.text(`Courier Name: ${inspection.courier_name || 'N/A'}`, 14, 40);
+                        doc.text(`Iquama Number: ${inspection.iquama_number || 'N/A'}`, 14, 46);
+                        doc.text(`Plate Number: ${inspection.plate_number || 'N/A'}`, 14, 52);
+                        doc.text(`Mobile Number: ${inspection.mobile_number || 'N/A'}`, 14, 58);
+                        doc.text(`Checked By: ${inspection.checked_by || 'N/A'}`, 14, 64);
                         doc.text(`Odometer: ${inspection.odometer || 'N/A'}`, 14, 70);
                         doc.text(`Date: ${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : 'N/A'}`, 110, 40);
                         doc.text(`Status: ${inspection.status || 'pending'}`, 110, 46);
-                        doc.text(`Marked Points: ${inspection.selectedPoints ? inspection.selectedPoints.length : 0}`, 110, 52);
+                        doc.text(`Marked Points: ${inspection.selected_points ? inspection.selected_points.length : 0}`, 110, 52);
 
-                        const inspectionItems = inspection.inspectionItems || [];
+                        const inspectionItems = inspection.inspection_items || [];
                         doc.text(`Handover Items: ${inspectionItems.length > 0 ? inspectionItems.map(item => {
                             if (item === 'tools') return 'Tools';
                             if (item === 'fireExtinguisher') return 'Fire Extinguisher';
@@ -539,7 +537,7 @@
                             return item;
                         }).join(', ') : 'None'}`, 14, 76);
 
-                        const uploadedImages = inspection.uploadedImages || [];
+                        const uploadedImages = inspection.uploaded_images || [];
                         let yPosition = 86;
 
                         if (uploadedImages.length > 0) {
@@ -611,7 +609,7 @@
                                         yPosition += finalHeight + 5;
                                     }
                                 } catch (error) {
-                                    console.error('Error adding image to PDF:', error);
+                                    console.error('Error adding image to PDF:', error.message);
                                     doc.text('(Error loading image)', xPosition, yPosition + 5);
                                     xPosition += 60;
                                     imagesInCurrentRow++;
@@ -632,7 +630,7 @@
 
                     doc.save(`vehicle_inspections_${new Date().toISOString().slice(0, 10)}.pdf`);
                 } catch (error) {
-                    console.error('PDF Generation Error:', error);
+                    console.error('PDF Generation Error:', error.message);
                     alert('Error generating PDF: ' + error.message);
                 } finally {
                     exportPDFBtn.innerHTML = 'Export to PDF';
