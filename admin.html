@@ -8,6 +8,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Embedded CSS to ensure button styling */
+        .btn-export-pdf {
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .btn-export-pdf:hover {
+            background: #0056b3;
+        }
+        .btn-export-pdf:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -53,7 +72,7 @@
     <div class="image-modal" id="imageModal">
         <div class="modal-container">
             <div class="modal-header">
-                <div id="modalTitle">handover Image</div>
+                <div id="modalTitle">Handover Image</div>
                 <span class="close-modal">×</span>
             </div>
             <div class="modal-content">
@@ -183,7 +202,10 @@
                             <button class="btn btn-reject" data-id="${inspection.id}">Reject</button>
                         `;
                     }
-                    buttonsDiv.innerHTML += `<button class="btn btn-delete" data-id="${inspection.id}">Delete</button>`;
+                    buttonsDiv.innerHTML += `
+                        <button class="btn btn-delete" data-id="${inspection.id}">Delete</button>
+                        <button class="btn btn-export-pdf" data-id="${inspection.id}">Export PDF</button>
+                    `;
                     card.appendChild(buttonsDiv);
                     inspectionsList.appendChild(card);
                 });
@@ -221,6 +243,176 @@
                         }
                     });
                 });
+
+                document.querySelectorAll('.btn-export-pdf').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const inspectionId = btn.dataset.id;
+                        const inspection = inspections.find(i => i.id === inspectionId);
+                        if (inspection) {
+                            exportInspectionToPDF(inspection);
+                        }
+                    });
+                });
+            }
+
+            async function exportInspectionToPDF(inspection) {
+                const btn = event.target;
+                btn.disabled = true; // Disable button to prevent multiple clicks
+                try {
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    let yPosition = 20;
+
+                    // Add title
+                    doc.setFontSize(18);
+                    doc.setTextColor(40, 53, 147);
+                    doc.text(`Vehicle Handover Report #${inspection.id || 'N/A'}`, 14, yPosition);
+                    yPosition += 10;
+
+                    // Add inspection details
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Handover Details', 14, yPosition);
+                    doc.setLineWidth(0.3);
+                    doc.line(14, yPosition + 2, 196, yPosition + 2);
+                    yPosition += 8;
+                    doc.text(`Courier Name: ${inspection.courier_name || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Iquama Number: ${inspection.iquama_number || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Plate Number: ${inspection.plate_number || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Mobile Number: ${inspection.mobile_number || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Checked By: ${inspection.checked_by || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Odometer: ${inspection.odometer || 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Date: ${inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : 'N/A'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Status: ${inspection.status || 'pending'}`, 14, yPosition);
+                    yPosition += 7;
+                    doc.text(`Marked Points: ${inspection.selected_points ? inspection.selected_points.length : 0}`, 14, yPosition);
+                    yPosition += 7;
+
+                    const inspectionItems = inspection.inspection_items || [];
+                    doc.text(`Handover Items: ${inspectionItems.length > 0 ? inspectionItems.map(item => {
+                        if (item === 'tools') return 'Tools';
+                        if (item === 'fireExtinguisher') return 'Fire Extinguisher';
+                        if (item === 'spareTire') return 'Spare Tire';
+                        if (item === 'medicalKit') return 'Medical Kit';
+                        return item;
+                    }).join(', ') : 'None'}`, 14, yPosition);
+                    yPosition += 10;
+
+                    // Add damage points
+                    // if (inspection.selected_points && inspection.selected_points.length > 0) {
+                    //     doc.text('Damage Points:', 14, yPosition);
+                    //     yPosition += 7;
+                    //     inspection.selected_points.forEach((point, index) => {
+                    //         doc.text(`Point ${index + 1}: X=${point.x.toFixed(2)}%, Y=${point.y.toFixed(2)}%`, 20, yPosition);
+                    //         yPosition += 7;
+                    //     });
+                    //     yPosition += 5;
+                    // }
+
+                    // Add images
+                    const uploadedImages = inspection.uploaded_images || [];
+                    if (uploadedImages.length > 0) {
+                        doc.setFontSize(14);
+                        doc.text('Handover Images', 14, yPosition);
+                        doc.setLineWidth(0.3);
+                        doc.line(14, yPosition + 2, 196, yPosition + 2);
+                        yPosition += 8;
+
+                        const imgWidth = 70;
+                        const imgHeight = 40;
+                        const imagesPerRow = 3;
+                        let imagesInCurrentRow = 0;
+                        let xPosition = 14;
+
+                        for (const img of uploadedImages) {
+                            if (yPosition + imgHeight > 280) {
+                                doc.addPage();
+                                yPosition = 20;
+                                xPosition = 14;
+                                imagesInCurrentRow = 0;
+                                doc.setFontSize(14);
+                                doc.text('Handover Images (Continued)', 14, yPosition);
+                                doc.setLineWidth(0.3);
+                                doc.line(14, yPosition + 2, 196, yPosition + 2);
+                                yPosition += 8;
+                            }
+
+                            if (imagesInCurrentRow >= imagesPerRow) {
+                                yPosition += imgHeight + 5;
+                                xPosition = 14;
+                                imagesInCurrentRow = 0;
+
+                                if (yPosition + imgHeight > 280) {
+                                    doc.addPage();
+                                    yPosition = 20;
+                                    xPosition = 14;
+                                    imagesInCurrentRow = 0;
+                                    doc.setFontSize(14);
+                                    doc.text('Handover Images (Continued)', 14, yPosition);
+                                    doc.setLineWidth(0.3);
+                                    doc.line(14, yPosition + 2, 196, yPosition + 2);
+                                    yPosition += 8;
+                                }
+                            }
+
+                            try {
+                                const imgObj = new Image();
+                                imgObj.src = img.url;
+                                await new Promise((resolve, reject) => {
+                                    imgObj.onload = resolve;
+                                    imgObj.onerror = () => reject(new Error(`Failed to load image: ${img.url}`));
+                                });
+
+                                const aspectRatio = imgObj.width / imgObj.height;
+                                let finalWidth = imgWidth;
+                                let finalHeight = finalWidth / aspectRatio;
+
+                                if (finalHeight > imgHeight) {
+                                    finalHeight = imgHeight;
+                                    finalWidth = finalHeight * aspectRatio;
+                                }
+
+                                doc.addImage(imgObj, 'JPEG', xPosition, yPosition, finalWidth, finalHeight);
+                                if (img.isMarkedImage) {
+                                    doc.setFontSize(10);
+                                    doc.text('Marked Image', xPosition, yPosition - 2);
+                                }
+                                xPosition += finalWidth + 5;
+                                imagesInCurrentRow++;
+                            } catch (error) {
+                                console.error('Error adding image to PDF:', error.message);
+                                doc.text('(Error loading image)', xPosition, yPosition + 5);
+                                xPosition += 60;
+                                imagesInCurrentRow++;
+                            }
+                        }
+                    } else {
+                        doc.text('No images available', 14, yPosition);
+                        yPosition += 10;
+                    }
+
+                    // Add page number
+                    const totalPages = doc.internal.getNumberOfPages();
+                    for (let i = 1; i <= totalPages; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`Page ${i} of ${totalPages}`, 200, 285, { align: 'right' });
+                    }
+
+                    doc.save(`handover_${inspection.id}.pdf`);
+                } catch (error) {
+                    console.error('Error generating PDF:', error.message);
+                    alert(`Error generating PDF: ${error.message || 'Unknown error'}`);
+                } finally {
+                    btn.disabled = false; // Re-enable button
+                }
             }
 
             function updateModalImage() {
@@ -286,8 +478,8 @@
                     updateAnalytics();
                     alert(`Inspection #${id} has been ${status}`);
                 } catch (error) {
-                    console.error('Error updating inspection:', error.message);
-                    alert('Error updating inspection. Please try again.');
+                    console.error('Error updating handover:', error.message);
+                    alert('Error updating handover. Please try again.');
                 }
             }
 
@@ -567,7 +759,7 @@
                                 }
 
                                 if (imagesInCurrentRow >= imagesPerRow) {
-                                    yPosition += imgHeight + 10;
+                                    yPosition += imgHeight + 5;
                                     xPosition = 14;
                                     imagesInCurrentRow = 0;
 
@@ -604,10 +796,6 @@
                                     doc.addImage(imgObj, 'JPEG', xPosition, yPosition, finalWidth, finalHeight);
                                     xPosition += finalWidth + 5;
                                     imagesInCurrentRow++;
-
-                                    if (imagesInCurrentRow >= imagesPerRow) {
-                                        yPosition += finalHeight + 5;
-                                    }
                                 } catch (error) {
                                     console.error('Error adding image to PDF:', error.message);
                                     doc.text('(Error loading image)', xPosition, yPosition + 5);
